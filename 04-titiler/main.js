@@ -65,7 +65,9 @@ const layers = [
 // source URL query parameters, and changing them rewrites the tile request for a
 // server-side re-render. Use string enum dropdowns with options.enum_titles:
 //   rescale       -> ["0,0.1","0,0.2","0,0.5","0,0.8"]  (brightness)
-//   color_formula -> a few presets (Natural / Flat / Vivid)
+//   color_formula -> a few presets (Natural / Flat / Vivid) 
+//   "gamma rgb 1.0",
+//   "gamma rgb 1.5, saturation 1.4",
 // Set layerControlToolsExpand: true.
 
 // ----------------------------------------------------------------------------
