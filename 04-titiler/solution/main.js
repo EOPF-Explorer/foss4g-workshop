@@ -24,14 +24,15 @@ const { collection, item } = await getCollectionAndItem([
 ]);
 
 const tiles = `${base}/collections/${collection}/items/${item}/tiles/WebMercatorQuad/{z}/{x}/{y}.png`;
-const band = (name) => `/measurements/reflectance:${name}`;
 
 // ---- Part A: true-colour RGB tuned with rescale + color_formula ----
 const defaultColorFormula =
   "gamma rgb 1.3, sigmoidal rgb 8 0.1, saturation 1.2";
-const rgbUrl =
-  `${tiles}?variables=${band("b04")}&variables=${band("b03")}&variables=${band("b02")}` +
-  `&rescale=0,0.5&color_formula=${encodeURIComponent(defaultColorFormula)}`;
+const rgbUrl = `${tiles}?${new URLSearchParams({
+  assets: "reflectance|bands=b04,b03,b02",
+  rescale: "0,0.5",
+  color_formula: defaultColorFormula,
+})}`;
 
 const rescaleOptions = {
   type: "string",
@@ -48,13 +49,18 @@ const rescaleOptions = {
 };
 
 // ---- Part B: spectral index via `expression` ----
-// Each band is referenced by its Zarr path. The single-band result is coloured
-// with `colormap_name`.
-const ndvi = `(${band("b08")}-${band("b04")})/(${band("b08")}+${band("b04")})`;
-const ndwi = `(${band("b03")}-${band("b08")})/(${band("b03")}+${band("b08")})`;
-const nbr = `(${band("b08")}-${band("b12")})/(${band("b08")}+${band("b12")})`;
+// The expression lives inside `assets` and references bands by name. The
+// single-band result is coloured with `colormap_name`.
+const ndvi = "reflectance|expression=(b08-b04)/(b08+b04)";
+const ndwi = "reflectance|expression=(b03-b08)/(b03+b08)";
+const nbr = "reflectance|expression=(b08-b12)/(b08+b12)";
 
-const indexUrl = `${tiles}?expression=${encodeURIComponent(ndvi)}&rescale=-0.3,0.8&colormap_name=ylgn`;
+// URLSearchParams encodes `+` as %2B; a raw `+` would decode to a space.
+const indexUrl = `${tiles}?${new URLSearchParams({
+  assets: ndvi,
+  rescale: "-0.3,0.8",
+  colormap_name: "ylgn",
+})}`;
 
 /** @type {import("@eox/map").EoxLayer[]} */
 const layers = [
@@ -113,7 +119,7 @@ const layers = [
           type: "object",
           title: "Band math + colour map",
           properties: {
-            expression: {
+            assets: {
               title: "Index",
               type: "string",
               enum: [ndvi, ndwi, nbr],
