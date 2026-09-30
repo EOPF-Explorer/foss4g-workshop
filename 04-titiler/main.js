@@ -17,11 +17,10 @@
 // plain Tile + XYZ layer — no GeoZarr source needed. The URL pattern is:
 //   ${base}/collections/${collection}/items/${item}/tiles/WebMercatorQuad/{z}/{x}/{y}.png
 // with query params:
-//   variables=/measurements/reflectance:b04
-//   variables=/measurements/reflectance:b03
-//   variables=/measurements/reflectance:b02
+//   assets=reflectance|bands=b04,b03,b02   (asset name, then its bands in R,G,B order)
 //   rescale=0,0.5
 //   color_formula=gamma rgb 1.3, sigmoidal rgb 8 0.1, saturation 1.2
+// Build the query string with URLSearchParams so the values are encoded.
 //
 // base URL
 // const base = "https://api.explorer.eopf.copernicus.eu/raster";
@@ -74,16 +73,19 @@ const layers = [
 // PART B — band math + colour maps
 // ----------------------------------------------------------------------------
 // Step 5: Add a second Tile + XYZ layer (visible: false) that computes a
-// spectral index server-side. Instead of `variables`, its URL uses:
-//   expression=(/measurements/reflectance:b08-/measurements/reflectance:b04)/(/measurements/reflectance:b08+/measurements/reflectance:b04)  (NDVI)
+// spectral index server-side. Instead of listing bands, put the band math inside
+// `assets`, referencing bands by name:
+//   assets=reflectance|expression=(b08-b04)/(b08+b04)  (NDVI)
 //   colormap_name=ylgn
 //   rescale=-0.3,0.8
+// The `+` must reach the server as %2B (a raw `+` decodes to a space);
+// URLSearchParams handles this.
 //
 // All three indices are normalized differences (A-B)/(A+B), bounded to [-1, 1]:
 //   NDVI (vegetation): (B08-B04)/(B08+B04)   (NIR - Red)   / (NIR + Red)
 //   NDWI (water):      (B03-B08)/(B03+B08)   (Green - NIR) / (Green + NIR)
 //   NBR  (burn):       (B08-B12)/(B08+B12)   (NIR - SWIR2) / (NIR + SWIR2)
 //
-// Add a layerConfig with three dropdowns: `expression` (NDVI / NDWI / NBR — the
-// band-math string is the enum value), `colormap_name` (ylgn / viridis / blues / …),
+// Add a layerConfig with three dropdowns: `assets` (NDVI / NDWI / NBR — the full
+// `reflectance|expression=...` string is the enum value), `colormap_name` (ylgn / viridis / blues / …),
 // and `rescale` (the index value range). Toggle the layer on in the layer control.
