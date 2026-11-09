@@ -66,9 +66,11 @@ Query parameters control the rendering:
 
 | Param | Meaning | Example |
 |-------|---------|---------|
-| `variables` | Band path in the Zarr (repeat once per RGB channel) | `/measurements/reflectance:b04` |
+| `assets` | Asset name, then its bands in R,G,B order (required on every request) | `reflectance\|bands=b04,b03,b02` |
 | `rescale` | Min,max reflectance to stretch to 0-255 | `0,0.5` |
 | `color_formula` | Colour pipeline | `gamma rgb 1.3, sigmoidal rgb 8 0.1, saturation 1.2` |
+
+Build the query string with `URLSearchParams` so every value is encoded correctly.
 
 The two parameters that shape the visual output are `rescale` and `color_formula`:
 
@@ -94,11 +96,11 @@ This uses the **same `layerConfig` mechanism** as exercise 02. In exercise 02, `
 
 ## Part B — band math & colour maps
 
-The server can run a **mathematical expression** across bands and colour the single-band result. Add a second `Tile` + `XYZ` layer (start it `visible: false` to skip the initial load) whose URL uses three different parameters:
+The server can run a **mathematical expression** across bands and colour the single-band result. Add a second `Tile` + `XYZ` layer (start it `visible: false` to skip the initial load) whose URL uses these parameters:
 
 | Param | Meaning | Example |
 |-------|---------|---------|
-| `expression` | Band math; reference each band by its Zarr path | `(/measurements/reflectance:b08-/measurements/reflectance:b04)/(/measurements/reflectance:b08+/measurements/reflectance:b04)` |
+| `assets` | Asset name, then band math that references bands by name | `reflectance\|expression=(b08-b04)/(b08+b04)` |
 | `colormap_name` | Named colour ramp applied to the result | `ylgn` |
 | `rescale` | Value range of the index → 0-255 | `-0.3,0.8` |
 
@@ -110,9 +112,9 @@ The example above is **NDVI** = (NIR − Red) / (NIR + Red). A few common indice
 | NDWI (water) | (Green − NIR) / (Green + NIR) | b03, b08 |
 | NBR (burn) | (NIR − SWIR2) / (NIR + SWIR2) | b08, b12 |
 
-Give this layer its own `layerConfig` with three dropdowns: `expression` (the index, with the band-math string as the `enum` value), `colormap_name` (`ylgn`, `viridis`, `blues`, ...), and `rescale` (the value range). Toggle the layer on in the layer control to see the coloured index. Changing the colour map triggers a server-side re-render.
+Give this layer its own `layerConfig` with three dropdowns: `assets` (the index, with the full `reflectance|expression=...` string as the `enum` value), `colormap_name` (`ylgn`, `viridis`, `blues`, ...), and `rescale` (the value range). Toggle the layer on in the layer control to see the coloured index. Changing the colour map triggers a server-side re-render.
 
-> `expression` replaces `variables` — provide the band math instead of listing channels.
+> The expression goes inside `assets`, in place of `bands=`. 
 
 ## Compare
 
